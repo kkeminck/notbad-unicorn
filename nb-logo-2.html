@@ -20,43 +20,53 @@
 
   <script>
     (function(){
-      const FILE_URL = "./nb-logo-2.json";
+      // Use ABSOLUTE URL to avoid any relative-path surprises in iframes
+      const FILE_URL = "https://kkeminck.github.io/notbad-unicorn/nb-logo-2.json";
 
       function ready(cb){
-        (window.UnicornStudio && UnicornStudio.addScene) ? cb()
+        (window.UnicornStudio && UnicornStudio.addScene)
+          ? cb()
           : requestAnimationFrame(()=>ready(cb));
       }
-      function dpi(){ return Math.min(3, Math.max(1, window.devicePixelRatio || 1)); }
+      const dpi = () => Math.min(3, Math.max(1, window.devicePixelRatio || 1));
 
       let scene = null;
       ready(async () => {
-        scene = await UnicornStudio.addScene({
-          elementId: "host",
-          filePath: FILE_URL,
-          fps: 60,
-          scale: 1,
-          dpi: dpi(),
-          lazyLoad: false,
-          altText: "notbad — logo animation 2",
-          ariaLabel: "Animated notbad logo 2",
-          interactivity: { mouse: { disableMobile: false, disabled: false } }
-        });
-        requestAnimationFrame(()=>{ try { scene.resize(); } catch(e){} });
-        window.addEventListener("resize", ()=>{ try { scene.resize(); } catch(e){} });
+        try {
+          scene = await UnicornStudio.addScene({
+            elementId: "host",
+            filePath: FILE_URL,
+            fps: 60,
+            scale: 1,
+            dpi: dpi(),
+            lazyLoad: false,
+            altText: "notbad — logo animation 2",
+            ariaLabel: "Animated notbad logo 2",
+            interactivity: { mouse: { disableMobile: false, disabled: false } }
+          });
+          requestAnimationFrame(()=>{ try { scene.resize(); } catch(e){} });
+          window.addEventListener("resize", ()=>{ try { scene.resize(); } catch(e){} });
+        } catch (err) {
+          console.error("[Unicorn] addScene failed:", err);
+        }
       });
 
-      // keep crisp if DPR changes
+      // Keep crisp on DPR change
       let last = window.devicePixelRatio || 1;
       setInterval(()=>{ const d = window.devicePixelRatio || 1;
         if (Math.abs(d - last) > 0.01){
           last = d;
-          try{ scene?.destroy?.(); }catch{}
+          try { scene?.destroy?.(); } catch {}
           scene = null;
           ready(async ()=>{
-            scene = await UnicornStudio.addScene({
-              elementId:"host", filePath: FILE_URL, fps:60, scale:1, dpi:d, lazyLoad:false
-            });
-            requestAnimationFrame(()=>{ try { scene.resize(); } catch(e){} });
+            try {
+              scene = await UnicornStudio.addScene({
+                elementId:"host", filePath: FILE_URL, fps:60, scale:1, dpi:d, lazyLoad:false
+              });
+              requestAnimationFrame(()=>{ try { scene.resize(); } catch(e){} });
+            } catch (err) {
+              console.error("[Unicorn] re-addScene failed:", err);
+            }
           });
         }
       }, 600);
